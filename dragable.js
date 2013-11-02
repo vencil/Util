@@ -1,4 +1,3 @@
-
 function Position(x, y) {
     this.X = x ? x : 0;
     this.Y = y ? y : 0;
