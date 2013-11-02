@@ -1,3 +1,18 @@
+function getHTTPObject() {
+    var xmlhttp = false;
+    if (window.XMLHttpRequest) {
+        xmlhttp = new XMLHttpRequest();
+        // for old IE version
+    } else if (window.ActiveXObject) {
+        try {
+            xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+        } catch (e) {
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+    }
+    return xmlhttp;
+}
+
 function ajaxGet(callback, url, sync) {
     var _reader = getHTTPObject();
 
