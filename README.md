@@ -1,2 +1,1 @@
-Util
-====
+Here are codes of practice which are posted on my blog (http://pvencs.blogspot.tw/)
