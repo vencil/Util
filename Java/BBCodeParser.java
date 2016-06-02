@@ -1,5 +1,5 @@
 /*
-This file is a java copy of Extendible-BBCode-Parser(https://github.com/patorjk/Extendible-BBCode-Parser)
+This is a java copy of Extendible-BBCode-Parser(https://github.com/patorjk/Extendible-BBCode-Parser)
 
 Copyright (C) 2016 by Vencil(vencsvencil@gmail.com)
 
@@ -124,6 +124,7 @@ public class BBCodeParser {
         BBCodeTag olTag = new BBCodeTag("ol") {
             @Override
             public String getOpenTag(String param, String content) {
+				if(param.isEmpty()) return "<ol>";
                 return "<ol style='list-style-type:" + param + "'>";
             }
 
@@ -137,6 +138,7 @@ public class BBCodeParser {
         BBCodeTag ulTag = new BBCodeTag("ul") {
             @Override
             public String getOpenTag(String param, String content) {
+				if(param.isEmpty()) return "<ul>";
                 return "<ul style='list-style-type:" + param + "'>";
             }
 
@@ -150,6 +152,7 @@ public class BBCodeParser {
         BBCodeTag listTag = new BBCodeTag("list") {
             @Override
             public String getOpenTag(String param, String content) {
+				if(param.isEmpty()) return "<ul>";
                 return "<ul style='list-style-type:" + param + "'>";
             }
 
