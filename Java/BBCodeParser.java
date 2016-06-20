@@ -30,7 +30,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BBCodeParser {
-    static BBCodeParser instance;
     static HashMap<String, BBCodeTag> tagMap;
     static Pattern urlPattern, colorNamePattern, colorCodePattern, emailPattern,
             bbclPattern, parsedTagPattern, noParsedTagPattern, openTags, closeTags,
@@ -81,12 +80,12 @@ public class BBCodeParser {
         subDepthsPattern = Pattern.compile("^(bbcl=)([0-9]+)");
     }
 
-    public static BBCodeParser getInstance() {
-        if (instance == null) {
-            instance = new BBCodeParser();
-        }
+    private static class LazyHolder {
+        private static final BBCodeParser instance = new BBCodeParser();
+    }
 
-        return instance;
+    public static BBCodeParser getInstance() {
+        return LazyHolder.instance;
     }
 
     private void initTags() {
@@ -117,20 +116,15 @@ public class BBCodeParser {
         addTagToMap("tbody");
         addTagToMap("tfoot");
         addTagToMap("thead");
-        addTagToMap("td");
         addTagToMap("th");
         addTagToMap("tr");
+        addTagToMap("td");
 
         BBCodeTag olTag = new BBCodeTag("ol") {
             @Override
             public String getOpenTag(String param, String content) {
-				if(param.isEmpty()) return "<ol>";
-                return "<ol style='list-style-type:" + param + "'>";
-            }
-
-            @Override
-            public String getEndTag(String param, String content) {
-                return "</ol>";
+                if (param.isEmpty()) return "<ol>";
+                return "<ol style=\"list-style-type:" + param + "\">";
             }
         };
         addTagToMap(olTag);
@@ -138,13 +132,8 @@ public class BBCodeParser {
         BBCodeTag ulTag = new BBCodeTag("ul") {
             @Override
             public String getOpenTag(String param, String content) {
-				if(param.isEmpty()) return "<ul>";
-                return "<ul style='list-style-type:" + param + "'>";
-            }
-
-            @Override
-            public String getEndTag(String param, String content) {
-                return "</ul>";
+                if (param.isEmpty()) return "<ul>";
+                return "<ul style=\"list-style-type:" + param + "\">";
             }
         };
         addTagToMap(ulTag);
@@ -152,8 +141,8 @@ public class BBCodeParser {
         BBCodeTag listTag = new BBCodeTag("list") {
             @Override
             public String getOpenTag(String param, String content) {
-				if(param.isEmpty()) return "<ul>";
-                return "<ul style='list-style-type:" + param + "'>";
+                if (param.isEmpty()) return "<ul>";
+                return "<ul style=\"list-style-type:" + param + "\">";
             }
 
             @Override
@@ -178,7 +167,7 @@ public class BBCodeParser {
                         }
                     }
                 }
-                return "<span style='color:" + colorCode + "'>";
+                return "<span style=\"color:" + colorCode + "\">";
             }
 
             @Override
@@ -188,10 +177,84 @@ public class BBCodeParser {
         };
         addTagToMap(colorTag);
 
+        BBCodeTag fontTag = new BBCodeTag("font") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                if (param.isEmpty()) {
+                    param = "'Open Sans','Noto Sans CJK TC','Noto Sans CJK SC','Noto Sans CJK JP','Noto Sans CJK KR','Lucida Grande',Tahoma,arial,sans-serif;";
+                }
+                return "<span style=\"font-family:" + param + "\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</span>";
+            }
+        };
+        addTagToMap(fontTag);
+
+        BBCodeTag sizeTag = new BBCodeTag("size") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                Pattern numberPattern = Pattern.compile("-?\\d+");
+                Matcher matcher = numberPattern.matcher(param);
+                if (matcher.find()) {
+                    param = matcher.group();
+                }
+                if (param.isEmpty()) param = "14";
+                return "<span style=\"font-size:" + param + "px;\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</span>";
+            }
+        };
+        addTagToMap(sizeTag);
+
+        BBCodeTag centerTag = new BBCodeTag("center") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                return "<div style=\"text-align:center;\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</div>";
+            }
+        };
+        addTagToMap(centerTag);
+
+        BBCodeTag leftTag = new BBCodeTag("left") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                return "<div style=\"text-align:left;\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</div>";
+            }
+        };
+        addTagToMap(leftTag);
+
+        BBCodeTag rightTag = new BBCodeTag("right") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                return "<div style=\"text-align:right;\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</div>";
+            }
+        };
+        addTagToMap(rightTag);
+
         BBCodeTag imgTag = new BBCodeTag("img") {
             @Override
             public String getOpenTag(String param, String content) {
-                return "<img src='" + content + "' \\/>";
+                return "<img src=\"" + content + "\" \\/>";
             }
 
             @Override
@@ -205,8 +268,8 @@ public class BBCodeParser {
         BBCodeTag urlTag = new BBCodeTag("url") {
             @Override
             public String getOpenTag(String param, String content) {
-                if(!urlPattern.matcher(param).find()) return "<a>";
-                return "<a onmousedown='window.open(\"" + param + "\");' href='" + param + "'>";
+                if (!urlPattern.matcher(param).find()) return "<a>";
+                return "<a onmousedown=\"window.open(\"" + param + "\");\" href=\"" + param + "\">";
             }
 
             @Override
@@ -215,20 +278,6 @@ public class BBCodeParser {
             }
         };
         addTagToMap(urlTag);
-
-        BBCodeTag embedTag = new BBCodeTag("embed") {
-            @Override
-            public String getOpenTag(String param, String content) {
-                return "<embed width=600 height=500 wmode=transparent src='" + content + "'\\/>";
-            }
-
-            @Override
-            public String getEndTag(String param, String content) {
-                return "";
-            }
-        };
-        embedTag.setDisplayContent(false);
-        addTagToMap(embedTag);
 
         BBCodeTag emailTag = new BBCodeTag("email") {
             @Override
@@ -249,15 +298,28 @@ public class BBCodeParser {
         BBCodeTag quoteTag = new BBCodeTag("quote") {
             @Override
             public String getOpenTag(String param, String content) {
-                return "<blockquote><p>";
+                return "<blockquote class=\"R_quote\">";
             }
 
             @Override
             public String getEndTag(String param, String content) {
-                return "</p></blockquote>";
+                return "</blockquote>";
             }
         };
         addTagToMap(quoteTag);
+
+        BBCodeTag brTag = new BBCodeTag("br") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                return "";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</br>";
+            }
+        };
+        addTagToMap(brTag);
 
         /*
          *  The [*] tag is special since the user does not define a closing [/*] tag when writing their bbcode.
@@ -276,7 +338,6 @@ public class BBCodeParser {
             }
         };
         addTagToMap(starTag);
-
     }
 
     public String parseToHTML(String text) {
