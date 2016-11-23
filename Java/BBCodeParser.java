@@ -1,5 +1,5 @@
 /*
-This is a java copy of Extendible-BBCode-Parser(https://github.com/patorjk/Extendible-BBCode-Parser)
+Inspired by Extendible-BBCode-Parser(https://github.com/patorjk/Extendible-BBCode-Parser)
 
 Copyright (C) 2016 by Vencil(vencsvencil@gmail.com)
 
