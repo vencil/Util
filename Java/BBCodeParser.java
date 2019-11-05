@@ -1,28 +1,3 @@
-/*
-Inspired by Extendible-BBCode-Parser(https://github.com/patorjk/Extendible-BBCode-Parser)
-
-Copyright (C) 2016 by Poyu(vencsvencil@gmail.com)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
-
-
 package demo.vencs;
 
 import java.util.HashMap;
@@ -30,28 +5,34 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BBCodeParser {
-    static HashMap<String, BBCodeTag> tagMap;
-    static Pattern urlPattern, colorNamePattern, colorCodePattern, emailPattern,
-            bbclPattern, parsedTagPattern, noParsedTagPattern, openTags, closeTags,
-            checkDepthsPattern, subDepthsComparePattern, subDepthsPattern;
+    private static HashMap<String, BBCodeTag> tagMap;
+    private static Pattern urlPattern;
+    private static Pattern colorNamePattern;
+    private static Pattern colorCodePattern;
+    private static Pattern colorRGBPattern;
+    private static Pattern emailPattern;
+    private static Pattern bbclPattern;
+    private static Pattern parsedTagPattern;
+    private static Pattern noParsedTagPattern;
+    private static Pattern checkDepthsPattern;
+    private static Pattern subDepthsComparePattern;
+    private static Pattern subDepthsPattern;
 
     private BBCodeParser() {
         initTags();
 
-        urlPattern = Pattern.compile("^(?:https?|file|c):(?:\\/{1,3}|\\\\{1})[-a-zA-Z0-9:;@#%&()~_?\\+=\\/\\\\\\.]*$");
+        urlPattern = Pattern.compile("^(?:https?):(?:\\/{1,3}|\\\\{1})[-a-zA-Z0-9:;,@#!%&()~_?\\+=\\/\\\\\\.]*$");
         colorNamePattern = Pattern.compile("^(?:aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgreen|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|green|greenyellow|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgreen|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen)$");
         colorCodePattern = Pattern.compile("^#?[a-fA-F0-9]{6}$");
+        colorRGBPattern = Pattern.compile("^rgb?\\((\\d+),\\s*(\\d+),\\s*(\\d+)(?:,\\s*(\\d+))?\\)$");
         emailPattern = Pattern.compile("[^\\s@]+@[^\\s@]+\\.[^\\s@]+");
 
         StringBuilder parsedTagList = new StringBuilder();
         StringBuilder noParsedTagList = new StringBuilder();
-        StringBuilder closeTagList = new StringBuilder();
         for (BBCodeTag bbCodeTag : tagMap.values()) {
             String tagName = bbCodeTag.getTagName();
             if (tagName.equals("*")) {
                 tagName = "\\" + tagName;
-            } else {
-                closeTagList.append("/" + tagName + "|");
             }
             parsedTagList.append(tagName + "|");
 
@@ -65,15 +46,10 @@ public class BBCodeParser {
         if (noParsedTagList.length() > 0) {
             noParsedTagList.setLength(noParsedTagList.length() - 1);
         }
-        if (closeTagList.length() > 0) {
-            closeTagList.setLength(closeTagList.length() - 1);
-        }
 
         bbclPattern = Pattern.compile("<bbcl=([0-9]+) (" + parsedTagList + ")([ =][^>]*?)?>((?:.|[\\r\\n])*?)<bbcl=\\1 \\/\\2>");
         parsedTagPattern = Pattern.compile("\\[(" + parsedTagList + ")([ =][^\\]]*?)?\\]([^\\[]*?)\\[\\/\\1\\]");
         noParsedTagPattern = Pattern.compile("\\[(" + noParsedTagList + ")([ =][^\\]]*?)?\\]([\\s\\S]*?)\\[\\/\\1\\]");
-        openTags = Pattern.compile("(\\[)((?:" + parsedTagList + ")(?:[ =][^\\]]*?)?)(\\])");
-        closeTags = Pattern.compile("(\\[)(" + closeTagList + ")(\\])");
 
         checkDepthsPattern = Pattern.compile("\\<([^\\>][^\\>]*?)\\>");
         subDepthsComparePattern = Pattern.compile("^bbcl=([0-9]+) ");
@@ -97,6 +73,9 @@ public class BBCodeParser {
         addTagToMap("s");
         addTagToMap("sub");
         addTagToMap("sup");
+
+        addTagToMap("h2");
+        addTagToMap("h3");
 
         BBCodeTag codeTag = new BBCodeTag("code") {
             @Override
@@ -158,15 +137,7 @@ public class BBCodeParser {
             @Override
             public String getOpenTag(String param, String content) {
                 String colorCode = param.toLowerCase();
-                if (!colorNamePattern.matcher(colorCode).find()) {
-                    if (!colorCodePattern.matcher(colorCode).find()) {
-                        colorCode = "black";
-                    } else {
-                        if (colorCode.charAt(0) != '#') {
-                            colorCode = "#" + colorCode;
-                        }
-                    }
-                }
+                colorCode = getCorrectColorCode(colorCode);
                 return "<span style=\"color:" + colorCode + "\">";
             }
 
@@ -176,6 +147,21 @@ public class BBCodeParser {
             }
         };
         addTagToMap(colorTag);
+
+        BBCodeTag backgroundColorTag = new BBCodeTag("bgcolor") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                String colorCode = param.toLowerCase();
+                colorCode = getCorrectColorCode(colorCode);
+                return "<span style=\"background-color:" + colorCode + "\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</span>";
+            }
+        };
+        addTagToMap(backgroundColorTag);
 
         BBCodeTag fontTag = new BBCodeTag("font") {
             @Override
@@ -251,6 +237,45 @@ public class BBCodeParser {
         };
         addTagToMap(rightTag);
 
+        BBCodeTag justifyTag = new BBCodeTag("justify") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                return "<div style=\"text-align:justify;\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</div>";
+            }
+        };
+        addTagToMap(justifyTag);
+
+        BBCodeTag startTag = new BBCodeTag("start") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                return "<div style=\"text-align:start;\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</div>";
+            }
+        };
+        addTagToMap(startTag);
+
+        BBCodeTag endTag = new BBCodeTag("end") {
+            @Override
+            public String getOpenTag(String param, String content) {
+                return "<div style=\"text-align:end;\">";
+            }
+
+            @Override
+            public String getEndTag(String param, String content) {
+                return "</div>";
+            }
+        };
+        addTagToMap(endTag);
+
         BBCodeTag imgTag = new BBCodeTag("img") {
             @Override
             public String getOpenTag(String param, String content) {
@@ -268,8 +293,11 @@ public class BBCodeParser {
         BBCodeTag urlTag = new BBCodeTag("url") {
             @Override
             public String getOpenTag(String param, String content) {
+                if (!param.toLowerCase().startsWith("javascript") && !param.startsWith("http://") && !param.startsWith("https://")) {
+                    param = "https://" + param;
+                }
                 if (!urlPattern.matcher(param).find()) return "<a>";
-                return "<a onmousedown=\"window.open(\"" + param + "\");\" href=\"" + param + "\">";
+                return "<a href=\"" + param + "\" target=\"_blank\" rel=\"noopener noreferrer nofollow\" onmousedown=\"event.preventDefault();event.stopPropagation();\">";
             }
 
             @Override
@@ -285,7 +313,7 @@ public class BBCodeParser {
                 String email = param.isEmpty() ? content : param;
                 if (!emailPattern.matcher(email).find()) return "<a>";
 
-                return "<a href='mailto:" + email + "' onmousedown=\"window.open(\'mailto:" + email + "\');\">";
+                return "<a href='mailto:" + email + "' onmousedown='event.preventDefault();event.stopPropagation();'>";
             }
 
             @Override
@@ -316,7 +344,7 @@ public class BBCodeParser {
 
             @Override
             public String getEndTag(String param, String content) {
-                return "</br>";
+                return "<br>";
             }
         };
         addTagToMap(brTag);
@@ -340,42 +368,77 @@ public class BBCodeParser {
         addTagToMap(starTag);
     }
 
+    private String getCorrectColorCode(String colorCode) {
+        if (!colorNamePattern.matcher(colorCode).find() && !colorRGBPattern.matcher(colorCode).find()) {
+            if (!colorCodePattern.matcher(colorCode).find()) {
+                colorCode = "black";
+            } else {
+                if (colorCode.charAt(0) != '#') {
+                    colorCode = "#" + colorCode;
+                }
+            }
+        }
+        return colorCode;
+    }
+
     public String parseToHTML(String text) {
-        StringBuffer tempFiller = new StringBuffer();
+        text = text.replace("$", "&#36;").replace("\\", "&#92;");
 
-        // escape HTML tag brackets
-        text = text.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+        StringBuilder source = new StringBuilder();
+        source.append(text);
 
-        Matcher openMatcher, endMatcher;
-        openMatcher = openTags.matcher(text);
-        while (openMatcher.find()) {
-            // group 1:'[' , group 2: tagName , group 3:']'
-            openMatcher.appendReplacement(tempFiller, "<" + openMatcher.group(2) + ">");
+        try {
+            int maxCount = 5000, count = 0;
+            while (!text.equals((text = processEmptyTag(text))) && count++ < maxCount) { }  // process tags that don't have their content parsed
+            while (!text.equals((text = fixStarTag(text))) && count++ < maxCount) { }       // add in closing tags for the [*] tag
+            while (!text.equals((text = addBbcodeLevels(text))) && count++ < maxCount) { }  // add in level metadata
+            while (!text.equals((text = processContent(text))) && count++ < maxCount) { }
+
+            if (count > maxCount) {
+                // return original content if there are some tag missed.
+                return source.toString();
+            }
+        } catch (Exception ignored) {
+            return source.toString();
         }
-        openMatcher.appendTail(tempFiller);
-        text = tempFiller.toString();
-        tempFiller.setLength(0);
 
-        endMatcher = closeTags.matcher(text);
-        while (endMatcher.find()) {
-            // group 1:'[' , group 2: end tagName , group 3:']'
-            endMatcher.appendReplacement(tempFiller, "<" + endMatcher.group(2) + ">");
+        return text.replace("&#36;", "$").replace("&#92;", "\\");
+    }
+
+    public String removeBBCodeTag(String text) {
+        text = text.replace("$", "&#36;").replace("\\", "&#92;");
+
+        StringBuilder source = new StringBuilder();
+        source.append(text);
+
+        try {
+            int maxCount = 5000, count = 0;
+            String prevText;
+            do {
+                prevText = text;
+                Matcher matcher = parsedTagPattern.matcher(text);
+                StringBuffer tempFiller = new StringBuffer();
+                while (matcher.find()) {
+                    if ("br".equalsIgnoreCase(matcher.group(1))) {
+                        matcher.appendReplacement(tempFiller, "\r\n");
+                    } else {
+                        String content = matcher.group(3).replaceAll("\\[", "&#91;").replaceAll("\\]", "&#93;");
+                        matcher.appendReplacement(tempFiller, content);
+                    }
+                }
+                matcher.appendTail(tempFiller);
+                text = tempFiller.toString();
+            } while (!prevText.equals(text) && count++ < maxCount);
+
+            if (count > maxCount) {
+                // return original content if there are some tag missed.
+                return source.toString();
+            }
+        } catch (Exception ignored) {
+            return source.toString();
         }
-        endMatcher.appendTail(tempFiller);
-        text = tempFiller.toString();
-        tempFiller.setLength(0);
 
-
-        // escape ['s that aren't apart of tags
-        text = text.replaceAll("\\[", "&#91;").replaceAll("\\]", "&#93;")
-                .replaceAll("<", "[").replaceAll(">", "]");
-
-        while (!text.equals((text = processEmptyTag(text)))) { }  // process tags that don't have their content parsed
-        while (!text.equals((text = fixStarTag(text)))) { }       // add in closing tags for the [*] tag
-        while (!text.equals((text = addBbcodeLevels(text)))) { }  // add in level metadata
-        while (!text.equals((text = processContent(text)))) { }
-
-        return text;
+        return text.replace("&#36;", "$").replace("&#92;", "\\");
     }
 
     private String processEmptyTag(String text) {
@@ -399,32 +462,30 @@ public class BBCodeParser {
      * help us define boundaries and figure out where to place the [/*] tags.
      */
     private String fixStarTag(String text) {
-        text = text.replaceAll("\\[(?!\\*[ =\\]]|list([ =][^\\]]*)?\\]|\\/list[\\]])", "<")
-                .replaceAll("\\[(?=list([ =][^\\]]*)?\\]|\\/list[\\]])", ">");
-
         StringBuffer tempFiller = new StringBuffer();
-        Matcher matcher = Pattern.compile(">list([ =][^\\]]*)?\\]([^>]*?)(>\\/list])").matcher(text);
+        Matcher matcher = Pattern.compile("\\[list([ =][^\\]]*)?\\]([^>]*?)(\\[\\/list])").matcher(text);
         while (matcher.find()) {
             String innerListTxt = matcher.group();
-            while (!innerListTxt.equals((innerListTxt = fixinnerStarTag(innerListTxt)))) { }
-            matcher.appendReplacement(tempFiller, innerListTxt.replaceAll(">", "<"));
+            while (!innerListTxt.equals((innerListTxt = fixInnerStarTag(innerListTxt)))) {
+            }
+            matcher.appendReplacement(tempFiller, innerListTxt);
         }
         matcher.appendTail(tempFiller);
 
-        return tempFiller.toString().replaceAll("<", "[");
+        return tempFiller.toString();
     }
 
-    private String fixinnerStarTag(String innerListTxt) {
-        Matcher innerMatcher = Pattern.compile("\\[\\*\\]([^\\[]*?)(\\[\\*\\]|>\\/list])").matcher(innerListTxt);
+    private String fixInnerStarTag(String innerListTxt) {
+        Matcher innerMatcher = Pattern.compile("\\[\\*\\]([^\\[]*?)(\\[\\*\\]|\\[\\/list])").matcher(innerListTxt);
         StringBuffer innerTempFiller = new StringBuffer();
         while (innerMatcher.find()) {
             String endTag = innerMatcher.group(2);
-            if (endTag.equalsIgnoreCase(">/list]")) {
-                endTag = "</*]</list]";
+            if (endTag.equalsIgnoreCase("[/list]")) {
+                endTag = "[/*][/list]";
             } else {
-                endTag = "</*][*]";
+                endTag = "[/*][*]";
             }
-            innerMatcher.appendReplacement(innerTempFiller, "<*]" + innerMatcher.group(1) + endTag);
+            innerMatcher.appendReplacement(innerTempFiller, "[*]" + innerMatcher.group(1) + endTag);
         }
         innerMatcher.appendTail(innerTempFiller);
 
@@ -462,7 +523,7 @@ public class BBCodeParser {
                 StringBuffer subTempFiller = new StringBuffer();
                 subMatcher = subDepthsPattern.matcher(subMatchStr);
                 while (subMatcher.find()) {
-                    subMatcher.appendReplacement(subTempFiller, subMatcher.group(1) + (Encoder.parseInt(subMatcher.group(2)) + 1));
+                    subMatcher.appendReplacement(subTempFiller, subMatcher.group(1) + (Integer.parseInt(subMatcher.group(2)) + 1));
                 }
                 subMatcher.appendTail(subTempFiller);
 
@@ -477,21 +538,28 @@ public class BBCodeParser {
     private String processContent(String text) {
         Matcher bbMatcher = bbclPattern.matcher(text);
         StringBuffer tempFiller = new StringBuffer();
-        while (bbMatcher.find()) {
-            String tagName = bbMatcher.group(2).toLowerCase(), tagParam = bbMatcher.group(3), tagContents = bbMatcher.group(4);
-            if (tagParam == null) tagParam = "";
-            else { tagParam = tagParam.trim().substring(1); } // remove "="
+        try {
+            while (bbMatcher.find()) {
+                String tagName = bbMatcher.group(2).toLowerCase(), tagParam = bbMatcher.group(3), tagContents = bbMatcher.group(4);
+                if (tagParam == null) tagParam = "";
+                else {
+                    tagParam = tagParam.trim().substring(1);
+                } // remove "="
 
-            BBCodeTag tag = tagMap.get(tagName);
-            String processedContent = tag.isNoParse() ? unprocess(tagContents) : processContent(tagContents),
-                    openTag = tag.getOpenTag(tagParam, processedContent),
-                    closeTag = tag.getEndTag(tagParam, processedContent);
+                BBCodeTag tag = tagMap.get(tagName);
 
-            if (!tag.isDisplayContent()) {
-                processedContent = "";
+                String processedContent = tag.isNoParse() ? unprocess(tagContents) : processContent(tagContents),
+                        openTag = tag.getOpenTag(tagParam, processedContent),
+                        closeTag = tag.getEndTag(tagParam, processedContent);
+
+                if (!tag.isDisplayContent()) {
+                    processedContent = "";
+                }
+
+                bbMatcher.appendReplacement(tempFiller, openTag + processedContent + closeTag);
             }
-
-            bbMatcher.appendReplacement(tempFiller, openTag + processedContent + closeTag);
+        } catch (StackOverflowError e) { // avoid exception generated from regex pattern
+            System.out.println("StackOverflowError");
         }
         bbMatcher.appendTail(tempFiller);
 
@@ -517,9 +585,9 @@ public class BBCodeParser {
 }
 
 class BBCodeTag {
-    String tagName = "";
-    boolean noParse = false;
-    boolean displayContent = true;
+    private String tagName;
+    private boolean noParse = false;
+    private boolean displayContent = true;
 
     BBCodeTag(String tagName) {
         this.tagName = tagName;
