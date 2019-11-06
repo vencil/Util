@@ -326,7 +326,7 @@ public class BBCodeParser {
         BBCodeTag quoteTag = new BBCodeTag("quote") {
             @Override
             public String getOpenTag(String param, String content) {
-                return "<blockquote class=\"R_quote\">";
+                return "<blockquote>";
             }
 
             @Override
