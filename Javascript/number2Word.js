@@ -67,17 +67,7 @@ let Number2Word = (function () {
      */
     function mergeSetting(target, defaultSetting) {
         if (target === null) target = {};
-        const ret = {};
-        const keys = Object.keys(defaultSetting);
-        for (let i = 0, len = keys.length; i < len; i++) {
-            let key = keys[i];
-            if (target.hasOwnProperty(key)) {
-                ret[key] = target[key]
-            } else if (defaultSetting.hasOwnProperty(key)) {
-                ret[key] = defaultSetting[key];
-            }
-        }
-        return ret;
+        return Object.assign(defaultSetting, target);
     }
 
     function clearZero(str, zero, type) {
