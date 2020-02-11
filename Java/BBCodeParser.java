@@ -103,7 +103,7 @@ public class BBCodeParser {
             @Override
             public String getOpenTag(String param, String content) {
                 if (param.isEmpty()) return "<ol>";
-                return "<ol style=\"list-style-type:" + param + "\">";
+                return "<ol style=\"list-style-type:" + escapeQuote(param) + "\">";
             }
         };
         addTagToMap(olTag);
@@ -112,7 +112,7 @@ public class BBCodeParser {
             @Override
             public String getOpenTag(String param, String content) {
                 if (param.isEmpty()) return "<ul>";
-                return "<ul style=\"list-style-type:" + param + "\">";
+                return "<ul style=\"list-style-type:" + escapeQuote(param) + "\">";
             }
         };
         addTagToMap(ulTag);
@@ -121,7 +121,7 @@ public class BBCodeParser {
             @Override
             public String getOpenTag(String param, String content) {
                 if (param.isEmpty()) return "<ul>";
-                return "<ul style=\"list-style-type:" + param + "\">";
+                return "<ul style=\"list-style-type:" + escapeQuote(param) + "\">";
             }
 
             @Override
@@ -169,7 +169,7 @@ public class BBCodeParser {
                 if (param.isEmpty()) {
                     param = "'Open Sans','Noto Sans CJK TC','Noto Sans CJK SC','Noto Sans CJK JP','Noto Sans CJK KR','Lucida Grande',Tahoma,arial,sans-serif;";
                 }
-                return "<span style=\"font-family:" + param + "\">";
+                return "<span style=\"font-family:" + escapeQuote(param) + "\">";
             }
 
             @Override
@@ -279,7 +279,12 @@ public class BBCodeParser {
         BBCodeTag imgTag = new BBCodeTag("img") {
             @Override
             public String getOpenTag(String param, String content) {
-                return "<img src=\"" + content + "\" \\/>";
+				if (!content.startsWith("http://") && !content.startsWith("https://")) {
+                    content = "https://" + content;
+                }
+                if (!urlPattern.matcher(content).find()) return "<img alt='image'>";
+
+                return "<img src=\"" + escapeQuote(content) + "\" >";
             }
 
             @Override
@@ -293,11 +298,11 @@ public class BBCodeParser {
         BBCodeTag urlTag = new BBCodeTag("url") {
             @Override
             public String getOpenTag(String param, String content) {
-                if (!param.toLowerCase().startsWith("javascript") && !param.startsWith("http://") && !param.startsWith("https://")) {
+                if (!param.startsWith("http://") && !param.startsWith("https://")) {
                     param = "https://" + param;
                 }
                 if (!urlPattern.matcher(param).find()) return "<a>";
-                return "<a href=\"" + param + "\" target=\"_blank\" rel=\"noopener noreferrer nofollow\" onmousedown=\"event.preventDefault();event.stopPropagation();\">";
+                return "<a href=\"" + escapeQuote(param) + "\" target=\"_blank\" rel=\"noopener noreferrer nofollow\" onmousedown=\"event.preventDefault();event.stopPropagation();\">";
             }
 
             @Override
@@ -313,7 +318,7 @@ public class BBCodeParser {
                 String email = param.isEmpty() ? content : param;
                 if (!emailPattern.matcher(email).find()) return "<a>";
 
-                return "<a href='mailto:" + email + "' onmousedown='event.preventDefault();event.stopPropagation();'>";
+                return "<a href='mailto:" + escapeQuote(email) + "' onmousedown='event.preventDefault();event.stopPropagation();'>";
             }
 
             @Override
@@ -366,6 +371,10 @@ public class BBCodeParser {
             }
         };
         addTagToMap(starTag);
+    }
+
+    private String escapeQuote(String htmlContent) {
+        return htmlContent.replace("\"", "&quot;");
     }
 
     private String getCorrectColorCode(String colorCode) {
