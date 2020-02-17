@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 public class BBCodeParser {
     private static HashMap<String, BBCodeTag> tagMap;
+	private static Pattern unicodePattern;
     private static Pattern urlPattern;
     private static Pattern colorNamePattern;
     private static Pattern colorCodePattern;
@@ -21,6 +22,7 @@ public class BBCodeParser {
     private BBCodeParser() {
         initTags();
 
+        unicodePattern = Pattern.compile("[\\u0080-\\u9fff]+");
         urlPattern = Pattern.compile("^(?:https?):(?:\\/{1,3}|\\\\{1})[-a-zA-Z0-9:;,@#!%&()~_?\\+=\\/\\\\\\.]*$");
         colorNamePattern = Pattern.compile("^(?:aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgreen|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|green|greenyellow|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgreen|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen)$");
         colorCodePattern = Pattern.compile("^#?[a-fA-F0-9]{6}$");
@@ -279,6 +281,7 @@ public class BBCodeParser {
         BBCodeTag imgTag = new BBCodeTag("img") {
             @Override
             public String getOpenTag(String param, String content) {
+				content = encodeUnicodeURL(content);
 				if (!content.startsWith("http://") && !content.startsWith("https://")) {
                     content = "https://" + content;
                 }
@@ -298,6 +301,7 @@ public class BBCodeParser {
         BBCodeTag urlTag = new BBCodeTag("url") {
             @Override
             public String getOpenTag(String param, String content) {
+				param = encodeUnicodeURL(param);
                 if (!param.startsWith("http://") && !param.startsWith("https://")) {
                     param = "https://" + param;
                 }
@@ -375,6 +379,17 @@ public class BBCodeParser {
 
     private String escapeQuote(String htmlContent) {
         return htmlContent.replace("\"", "&quot;");
+    }
+
+    private String encodeUnicodeURL(String url) {
+        Matcher matcher = unicodePattern.matcher(url);
+        StringBuffer buffer = new StringBuffer();
+        while (matcher.find()) {
+            String group = matcher.group();
+            matcher.appendReplacement(buffer, Encoder.encodeURIComponent(group));
+        }
+        matcher.appendTail(buffer);
+        return buffer.toString();
     }
 
     private String getCorrectColorCode(String colorCode) {
